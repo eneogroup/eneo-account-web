@@ -1,0 +1,225 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── CSS Custom Properties ─────────────────────────────────────── */
+:root {
+  --color-purple:       #7B2D8B;
+  --color-purple-dark:  #6B21A8;
+  --color-purple-light: #e8d8f5;
+  --color-gold:         #FBAD1A;
+  --color-gold-dark:    #F5A623;
+  --color-bg:           #F8F7FC;
+  --color-surface:      #FFFFFF;
+  --color-border:       #EDE9F4;
+  --color-text:         #1a1025;
+  --color-text-muted:   #6b5f7a;
+  --color-text-light:   #9d8fb0;
+
+  --sidebar-width: 260px;
+  --header-height: 64px;
+
+  --transition-fast:   150ms ease;
+  --transition-base:   250ms ease;
+  --transition-slow:   400ms ease;
+}
+
+/* ── Base Reset & Body ──────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Scrollbar Styling ──────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-purple-light);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-purple);
+}
+
+/* ── Typography ─────────────────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Sora', sans-serif;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--color-text);
+}
+
+/* ── Focus visible ──────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-purple);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* ── Utility Component Classes ──────────────────────────────────── */
+@layer components {
+
+  /* Card */
+  .card {
+    @apply bg-white rounded-2xl shadow-card border border-[#EDE9F4] transition-shadow duration-200;
+  }
+  .card:hover {
+    @apply shadow-card-hover;
+  }
+
+  /* Button variants */
+  .btn {
+    @apply inline-flex items-center gap-2 font-medium rounded-xl px-5 py-2.5 text-sm transition-all duration-200 cursor-pointer select-none;
+  }
+  .btn:disabled {
+    @apply opacity-50 cursor-not-allowed;
+  }
+
+  .btn-primary {
+    @apply btn bg-eneo-purple-500 hover:bg-eneo-purple-600 text-white shadow-sm hover:shadow-md active:scale-[0.97];
+  }
+
+  .btn-secondary {
+    @apply btn bg-white border border-[#EDE9F4] text-eneo-purple-600 hover:bg-eneo-purple-50 hover:border-eneo-purple-200 active:scale-[0.97];
+  }
+
+  .btn-gold {
+    @apply btn bg-eneo-gold-400 hover:bg-eneo-gold-500 text-white shadow-sm hover:shadow-md active:scale-[0.97];
+  }
+
+  .btn-danger {
+    @apply btn bg-red-500 hover:bg-red-600 text-white shadow-sm hover:shadow-md active:scale-[0.97];
+  }
+
+  .btn-ghost {
+    @apply btn bg-transparent hover:bg-eneo-purple-50 text-eneo-purple-600;
+  }
+
+  /* Form fields */
+  .input {
+    @apply w-full rounded-xl border border-[#EDE9F4] bg-white px-4 py-2.5 text-sm text-gray-800
+           placeholder:text-gray-400
+           focus:outline-none focus:ring-2 focus:ring-eneo-purple-400 focus:border-transparent
+           transition-all duration-150;
+  }
+  .input:disabled {
+    @apply bg-gray-50 text-gray-400 cursor-not-allowed;
+  }
+
+  .label {
+    @apply block text-xs font-semibold text-eneo-purple-600 uppercase tracking-wide mb-1.5;
+  }
+
+  /* Badge */
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold;
+  }
+  .badge-purple {
+    @apply badge bg-eneo-purple-100 text-eneo-purple-700;
+  }
+  .badge-gold {
+    @apply badge bg-eneo-gold-100 text-eneo-gold-700;
+  }
+  .badge-green {
+    @apply badge bg-green-100 text-green-700;
+  }
+  .badge-red {
+    @apply badge bg-red-100 text-red-700;
+  }
+  .badge-gray {
+    @apply badge bg-gray-100 text-gray-600;
+  }
+
+  /* Skeleton loader */
+  .skeleton {
+    @apply rounded-lg bg-gradient-to-r from-gray-100 via-gray-50 to-gray-100 animate-shimmer;
+    background-size: 200% 100%;
+  }
+
+  /* Section header */
+  .section-title {
+    @apply font-display text-xl font-bold text-eneo-purple-700 mb-1;
+  }
+  .section-subtitle {
+    @apply text-sm text-[var(--color-text-muted)] mb-6;
+  }
+
+  /* Divider */
+  .divider {
+    @apply border-t border-[#EDE9F4] my-6;
+  }
+
+  /* Toast base (utilisé avec les animations) */
+  .toast {
+    @apply fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-2xl px-5 py-3.5
+           shadow-xl text-sm font-medium backdrop-blur-sm animate-slide-in-up;
+    min-width: 280px;
+    max-width: 400px;
+  }
+  .toast-success {
+    @apply toast bg-white border-l-4 border-green-500 text-gray-800;
+  }
+  .toast-error {
+    @apply toast bg-white border-l-4 border-red-500 text-gray-800;
+  }
+  .toast-info {
+    @apply toast bg-white border-l-4 border-eneo-purple-500 text-gray-800;
+  }
+  .toast-warning {
+    @apply toast bg-white border-l-4 border-eneo-gold-400 text-gray-800;
+  }
+}
+
+/* ── Page transition ────────────────────────────────────────────── */
+.page-enter {
+  animation: slideInUp 0.35s ease-out both;
+}
+
+/* ── Sidebar active indicator ───────────────────────────────────── */
+.nav-item-active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  background: var(--color-gold);
+  border-radius: 0 4px 4px 0;
+}
+
+/* ── Avatar ring gradient ───────────────────────────────────────── */
+.avatar-ring {
+  background: conic-gradient(from 180deg, #7B2D8B, #FBAD1A, #7B2D8B);
+  padding: 2px;
+  border-radius: 9999px;
+}
+
+/* ── Gradient text ──────────────────────────────────────────────── */
+.text-gradient {
+  background: linear-gradient(135deg, #7B2D8B 0%, #FBAD1A 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
