@@ -38,7 +38,7 @@ export default function Security() {
     else setRefreshing(true)
     try {
       const { data } = await api.getSessions(p)
-      const results  = data?.results || data || []
+      const results = Array.isArray(data) ? data : Array.isArray(data?.results) ? data.results : []
       setSessions(results)
       setTotal(data?.count || results.length)
       setPage(p)

@@ -151,10 +151,14 @@ export default function Dashboard() {
           api.getApps(),
         ])
         if (sessRes.status === 'fulfilled') {
-          setSessions(sessRes.value.data?.results || sessRes.value.data || [])
+          const raw = sessRes.value.data
+          const list = Array.isArray(raw) ? raw : Array.isArray(raw?.results) ? raw.results : []
+          setSessions(list)
         }
         if (appsRes.status === 'fulfilled') {
-          setApps(appsRes.value.data?.results || appsRes.value.data || [])
+          const raw = appsRes.value.data
+          const list = Array.isArray(raw) ? raw : Array.isArray(raw?.results) ? raw.results : []
+          setApps(list)
         }
       } finally {
         setLoading(false)
@@ -163,8 +167,9 @@ export default function Dashboard() {
     loadData()
   }, [])
 
-  const currentSession = sessions.find(s => s.is_current)
-  const totalSessions  = sessions.length
+  const safeSessions   = Array.isArray(sessions) ? sessions : []
+  const currentSession = safeSessions.find(s => s.is_current)
+  const totalSessions  = safeSessions.length
 
   return (
     <Layout>

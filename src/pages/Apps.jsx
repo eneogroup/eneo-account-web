@@ -101,7 +101,8 @@ export default function Apps() {
     else setRefreshing(true)
     try {
       const { data } = await api.getApps()
-      setApps(data?.results || data || [])
+      const raw = data
+      setApps(Array.isArray(raw) ? raw : Array.isArray(raw?.results) ? raw.results : [])
     } catch {
       toast.error('Impossible de charger les applications.')
     } finally {
