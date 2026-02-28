@@ -40,14 +40,21 @@ export function AuthProvider({ children }) {
         setUser(jwtUser)
         await loadProfile()
       } else {
-        // Tenter un refresh silencieux (F5 ou retour sur la page)
-        // Le refresh token est peut-être encore dans sessionStorage
-        const newToken = await refreshToken()
-        if (newToken) {
-          const jwtUser = getUserInfo()
-          setUser(jwtUser)
-          await loadProfile()
+        // Vérifier qu'on n'est pas en train de se déconnecter
+        const rt    = sessionStorage.getItem('rt')
+        const rtExp = sessionStorage.getItem('rt_exp')
+        const hasValidRt = rt && rtExp && Date.now() < Number(rtExp)
+
+        if (hasValidRt) {
+          // Refresh silencieux : même session, pas de nouvelle création Keycloak
+          const newToken = await refreshToken()
+          if (newToken) {
+            const jwtUser = getUserInfo()
+            setUser(jwtUser)
+            await loadProfile()
+          }
         }
+        // Sinon : pas de rt valide → ProtectedRoute redirigera vers login
       }
     } catch {
       // Silencieux — les pages protégées gèrent la redirection
@@ -75,13 +82,18 @@ export function AuthProvider({ children }) {
 
   // ── Logout ────────────────────────────────────────────────────
   const logout = useCallback(async () => {
-    try {
-      await api.logout()
-    } catch {
-      // Ignorer les erreurs API au logout
-    }
+    // 1. Nettoyer sessionStorage immédiatement avant tout re-render
+    try { sessionStorage.removeItem('rt') } catch {}
+    try { sessionStorage.removeItem('rt_exp') } catch {}
+
+    // 2. Vider l'état React
     setUser(null)
     setProfile(null)
+
+    // 3. Appel API logout (best effort, on n'attend pas)
+    api.logout().catch(() => {})
+
+    // 4. Redirection Keycloak (coupe le fil d'exécution)
     kcLogout()
   }, [])
 
