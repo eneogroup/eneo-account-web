@@ -192,12 +192,22 @@ function AvatarSection({ profile, displayName, onUpload, onDelete, isLoading }) 
 }
 
 // ── Section Adresse ──────────────────────────────────────────────
+// Le backend retourne les clés en français : pays, ville, quartier, rue, code_postal
 function AddressSection({ address, onSave, isSaving, loading }) {
-  const [form, setForm] = useState({ country: '', city: '', district: '', street: '', postal_code: '' })
+  const [form, setForm] = useState({ pays: '', ville: '', quartier: '', rue: '', code_postal: '' })
   const [dirty, setDirty] = useState(false)
 
   useEffect(() => {
-    if (address) setForm({ ...address })
+    if (address) {
+      // Accepter les deux formats : français (backend) et anglais (legacy)
+      setForm({
+        pays:         address.pays        || address.country     || '',
+        ville:        address.ville       || address.city        || '',
+        quartier:     address.quartier    || address.district    || '',
+        rue:          address.rue         || address.street      || '',
+        code_postal:  address.code_postal || address.postal_code || '',
+      })
+    }
   }, [address])
 
   const handleChange = (field, value) => {
@@ -229,24 +239,24 @@ function AddressSection({ address, onSave, isSaving, loading }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="label">Pays</label>
-            <input className="input" value={form.country || ''} onChange={e => handleChange('country', e.target.value)} placeholder="Congo" />
+            <input className="input" value={form.pays} onChange={e => handleChange('pays', e.target.value)} placeholder="Congo" />
           </div>
           <div>
             <label className="label">Ville</label>
-            <input className="input" value={form.city || ''} onChange={e => handleChange('city', e.target.value)} placeholder="Pointe-Noire" />
+            <input className="input" value={form.ville} onChange={e => handleChange('ville', e.target.value)} placeholder="Pointe-Noire" />
           </div>
           <div>
             <label className="label">Quartier</label>
-            <input className="input" value={form.district || ''} onChange={e => handleChange('district', e.target.value)} placeholder="Nom du quartier" />
+            <input className="input" value={form.quartier} onChange={e => handleChange('quartier', e.target.value)} placeholder="Nom du quartier" />
           </div>
           <div>
             <label className="label">Code postal</label>
-            <input className="input" value={form.postal_code || ''} onChange={e => handleChange('postal_code', e.target.value)} placeholder="Code postal" />
+            <input className="input" value={form.code_postal} onChange={e => handleChange('code_postal', e.target.value)} placeholder="Code postal" />
           </div>
         </div>
         <div>
           <label className="label">Rue / Adresse complète</label>
-          <input className="input" value={form.street || ''} onChange={e => handleChange('street', e.target.value)} placeholder="N° et nom de rue" />
+          <input className="input" value={form.rue} onChange={e => handleChange('rue', e.target.value)} placeholder="N° et nom de rue" />
         </div>
         {dirty && (
           <div className="flex justify-end pt-2">
