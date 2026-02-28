@@ -153,10 +153,14 @@ export async function exchangeCodeForTokens(code, returnedState) {
   return tokens
 }
 
-// ── Stocker les tokens en mémoire ────────────────────────────────
-// Le refresh_token est persisté en sessionStorage pour survivre
-// aux rechargements de page (F5), évitant de créer une nouvelle
-// session Keycloak à chaque refresh.
+// ── Stocker les tokens ───────────────────────────────────────────
+// Stratégie :
+//   - accessToken  → mémoire + sessionStorage (lecture rapide au F5)
+//   - refreshToken → mémoire + sessionStorage (refresh silencieux au F5)
+//   - idToken      → mémoire uniquement (utilisé seulement au logout)
+//
+// Sécurité : sessionStorage est isolé par onglet et vidé à la fermeture
+// du navigateur. C'est acceptable pour un access token de courte durée.
 function storeTokens(tokens) {
   const decoded = decodeJwt(tokens.access_token)
   const expiresAt = decoded?.exp
@@ -166,17 +170,22 @@ function storeTokens(tokens) {
   _tokenStore = {
     accessToken:  tokens.access_token,
     refreshToken: tokens.refresh_token || null,
-    idToken:      tokens.id_token || null,
+    idToken:      tokens.id_token      || null,
     expiresAt,
   }
 
-  // Persister en sessionStorage pour survivre au F5
-  if (tokens.refresh_token) {
-    try {
-      sessionStorage.setItem('rt', tokens.refresh_token)
+  // Persister dans sessionStorage pour survivre au F5
+  try {
+    sessionStorage.setItem('at',     tokens.access_token)
+    sessionStorage.setItem('at_exp', String(expiresAt))
+    if (tokens.refresh_token) {
+      sessionStorage.setItem('rt',     tokens.refresh_token)
       sessionStorage.setItem('rt_exp', String(expiresAt))
-    } catch {}
-  }
+    }
+    if (tokens.id_token) {
+      sessionStorage.setItem('it', tokens.id_token)
+    }
+  } catch {}
 
   scheduleTokenRefresh(expiresAt)
 }
@@ -239,20 +248,37 @@ export function getIdToken() {
 }
 
 export function isAuthenticated() {
+  // 1. Vérifier la mémoire en priorité (cas nominal, pas de F5)
   if (
     _tokenStore.accessToken &&
     _tokenStore.expiresAt &&
     Date.now() < _tokenStore.expiresAt
   ) return true
 
-  // Tenter de restaurer depuis sessionStorage (survie au F5)
+  // 2. Après un F5 : tenter de restaurer le accessToken depuis sessionStorage
   try {
-    const rt     = sessionStorage.getItem('rt')
-    const rtExp  = sessionStorage.getItem('rt_exp')
+    const at    = sessionStorage.getItem('at')
+    const atExp = sessionStorage.getItem('at_exp')
+
+    if (at && atExp && Date.now() < Number(atExp)) {
+      // accessToken encore valide → on le restaure directement en mémoire
+      // sans aucun appel réseau
+      _tokenStore.accessToken  = at
+      _tokenStore.expiresAt    = Number(atExp)
+      _tokenStore.refreshToken = sessionStorage.getItem('rt')     || null
+      _tokenStore.idToken      = sessionStorage.getItem('it')     || null
+      scheduleTokenRefresh(Number(atExp))
+      return true  // ✅ connecté, sans refresh réseau
+    }
+
+    // 3. accessToken expiré mais refreshToken encore valide
+    const rt    = sessionStorage.getItem('rt')
+    const rtExp = sessionStorage.getItem('rt_exp')
     if (rt && rtExp && Date.now() < Number(rtExp)) {
-      // On a un refresh token valide → on peut rafraîchir sans nouvelle session
+      // On charge le refreshToken en mémoire pour que refreshToken() puisse l'utiliser
       _tokenStore.refreshToken = rt
-      return false  // pas encore de access token, mais refreshToken est dispo
+      _tokenStore.idToken      = sessionStorage.getItem('it') || null
+      return false  // pas encore de accessToken valide → initAuth() fera le refresh
     }
   } catch {}
 
@@ -279,8 +305,11 @@ export function clearTokens() {
     expiresAt:    null,
   }
   try {
+    sessionStorage.removeItem('at')
+    sessionStorage.removeItem('at_exp')
     sessionStorage.removeItem('rt')
     sessionStorage.removeItem('rt_exp')
+    sessionStorage.removeItem('it')
   } catch {}
 }
 
