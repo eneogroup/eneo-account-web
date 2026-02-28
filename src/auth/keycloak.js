@@ -154,6 +154,9 @@ export async function exchangeCodeForTokens(code, returnedState) {
 }
 
 // ── Stocker les tokens en mémoire ────────────────────────────────
+// Le refresh_token est persisté en sessionStorage pour survivre
+// aux rechargements de page (F5), évitant de créer une nouvelle
+// session Keycloak à chaque refresh.
 function storeTokens(tokens) {
   const decoded = decodeJwt(tokens.access_token)
   const expiresAt = decoded?.exp
@@ -165,6 +168,14 @@ function storeTokens(tokens) {
     refreshToken: tokens.refresh_token || null,
     idToken:      tokens.id_token || null,
     expiresAt,
+  }
+
+  // Persister en sessionStorage pour survivre au F5
+  if (tokens.refresh_token) {
+    try {
+      sessionStorage.setItem('rt', tokens.refresh_token)
+      sessionStorage.setItem('rt_exp', String(expiresAt))
+    } catch {}
   }
 
   scheduleTokenRefresh(expiresAt)
@@ -228,11 +239,24 @@ export function getIdToken() {
 }
 
 export function isAuthenticated() {
-  return !!(
+  if (
     _tokenStore.accessToken &&
     _tokenStore.expiresAt &&
     Date.now() < _tokenStore.expiresAt
-  )
+  ) return true
+
+  // Tenter de restaurer depuis sessionStorage (survie au F5)
+  try {
+    const rt     = sessionStorage.getItem('rt')
+    const rtExp  = sessionStorage.getItem('rt_exp')
+    if (rt && rtExp && Date.now() < Number(rtExp)) {
+      // On a un refresh token valide → on peut rafraîchir sans nouvelle session
+      _tokenStore.refreshToken = rt
+      return false  // pas encore de access token, mais refreshToken est dispo
+    }
+  } catch {}
+
+  return false
 }
 
 export function isTokenExpired() {
@@ -254,6 +278,10 @@ export function clearTokens() {
     idToken:      null,
     expiresAt:    null,
   }
+  try {
+    sessionStorage.removeItem('rt')
+    sessionStorage.removeItem('rt_exp')
+  } catch {}
 }
 
 export async function logout() {

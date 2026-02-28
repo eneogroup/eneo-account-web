@@ -35,12 +35,22 @@ export function AuthProvider({ children }) {
     setIsLoading(true)
     try {
       if (kcIsAuthenticated()) {
+        // Token encore valide en mémoire
         const jwtUser = getUserInfo()
         setUser(jwtUser)
         await loadProfile()
+      } else {
+        // Tenter un refresh silencieux (F5 ou retour sur la page)
+        // Le refresh token est peut-être encore dans sessionStorage
+        const newToken = await refreshToken()
+        if (newToken) {
+          const jwtUser = getUserInfo()
+          setUser(jwtUser)
+          await loadProfile()
+        }
       }
     } catch {
-      // Token invalide → on ne redirige pas encore (laisse les pages gérer)
+      // Silencieux — les pages protégées gèrent la redirection
     } finally {
       setIsLoading(false)
       setIsReady(true)
