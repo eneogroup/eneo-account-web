@@ -20,21 +20,19 @@ let _tokenStore = {
   accessToken:  null,
   refreshToken: null,
   idToken:      null,
-  expiresAt:    null,   // timestamp ms
+  expiresAt:    null,
 }
 
 let _refreshTimer = null
 
 // ── Helpers PKCE ─────────────────────────────────────────────────
 
-/** Génère un string aléatoire sécurisé (code_verifier) */
 function generateCodeVerifier() {
   const array = new Uint8Array(64)
   crypto.getRandomValues(array)
   return base64UrlEncode(array)
 }
 
-/** SHA-256 puis base64url → code_challenge */
 async function generateCodeChallenge(verifier) {
   const encoder = new TextEncoder()
   const data = encoder.encode(verifier)
@@ -42,7 +40,6 @@ async function generateCodeChallenge(verifier) {
   return base64UrlEncode(new Uint8Array(digest))
 }
 
-/** Encode en base64url (sans padding) */
 function base64UrlEncode(buffer) {
   return btoa(String.fromCharCode(...buffer))
     .replace(/\+/g, '-')
@@ -50,7 +47,6 @@ function base64UrlEncode(buffer) {
     .replace(/=/g, '')
 }
 
-/** Génère un state aléatoire (protection CSRF) */
 function generateState() {
   const array = new Uint8Array(16)
   crypto.getRandomValues(array)
@@ -67,15 +63,42 @@ function decodeJwt(token) {
   }
 }
 
+// ── Persistance PKCE robuste (sessionStorage + cookie fallback) ───
+// Sur certains navigateurs en contexte cross-origin HTTPS,
+// sessionStorage peut être vidé entre la redirection et le retour.
+
+function pkceSet(key, value) {
+  try { sessionStorage.setItem(key, value) } catch {}
+  // Cookie de session en fallback (supprimé à la fermeture du navigateur)
+  const isSecure = location.protocol === 'https:' ? '; Secure' : ''
+  document.cookie = `${key}=${encodeURIComponent(value)}; path=/; SameSite=Lax${isSecure}`
+}
+
+function pkceGet(key) {
+  // sessionStorage en priorité
+  try {
+    const val = sessionStorage.getItem(key)
+    if (val) return val
+  } catch {}
+  // Fallback cookie
+  const match = document.cookie.match(new RegExp(`(?:^|; )${key}=([^;]*)`))
+  return match ? decodeURIComponent(match[1]) : null
+}
+
+function pkceRemove(key) {
+  try { sessionStorage.removeItem(key) } catch {}
+  document.cookie = `${key}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`
+}
+
 // ── Redirection vers Keycloak ────────────────────────────────────
 export async function redirectToLogin() {
   const verifier  = generateCodeVerifier()
   const challenge = await generateCodeChallenge(verifier)
   const state     = generateState()
 
-  // Persister temporairement en sessionStorage pour survivre à la redirection
-  sessionStorage.setItem('pkce_verifier', verifier)
-  sessionStorage.setItem('pkce_state',    state)
+  // Double stockage : sessionStorage + cookie de session
+  pkceSet('pkce_verifier', verifier)
+  pkceSet('pkce_state',    state)
 
   const params = new URLSearchParams({
     client_id:             KC_CLIENT_ID,
@@ -92,12 +115,12 @@ export async function redirectToLogin() {
 
 // ── Échange code → tokens (page /callback) ───────────────────────
 export async function exchangeCodeForTokens(code, returnedState) {
-  const verifier      = sessionStorage.getItem('pkce_verifier')
-  const expectedState = sessionStorage.getItem('pkce_state')
+  const verifier      = pkceGet('pkce_verifier')
+  const expectedState = pkceGet('pkce_state')
 
   // Nettoyage immédiat
-  sessionStorage.removeItem('pkce_verifier')
-  sessionStorage.removeItem('pkce_state')
+  pkceRemove('pkce_verifier')
+  pkceRemove('pkce_state')
 
   if (!verifier) {
     throw new Error('Code verifier manquant — session expirée ou attaque replay.')
@@ -151,7 +174,6 @@ function storeTokens(tokens) {
 function scheduleTokenRefresh(expiresAt) {
   if (_refreshTimer) clearTimeout(_refreshTimer)
 
-  // Rafraîchir 60s avant expiration
   const delay = expiresAt - Date.now() - 60_000
   if (delay <= 0) {
     refreshToken()
@@ -165,7 +187,6 @@ function scheduleTokenRefresh(expiresAt) {
 
 export async function refreshToken() {
   if (!_tokenStore.refreshToken) {
-    // Pas de refresh token → forcer reconnexion
     clearTokens()
     return null
   }
@@ -240,7 +261,7 @@ export async function logout() {
   clearTokens()
 
   const params = new URLSearchParams({
-    client_id:            KC_CLIENT_ID,
+    client_id:                KC_CLIENT_ID,
     post_logout_redirect_uri: window.location.origin,
   })
 
