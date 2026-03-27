@@ -10,6 +10,7 @@ import {
   getUserInfo,
   redirectToLogin,
   logout as kcLogout,
+  clearTokens,
   refreshToken,
   getAccessToken,
 } from '../auth/keycloak'
@@ -82,9 +83,10 @@ export function AuthProvider({ children }) {
 
   // ── Logout ────────────────────────────────────────────────────
   const logout = useCallback(async () => {
-    // 1. Nettoyer sessionStorage immédiatement avant tout re-render
-    try { sessionStorage.removeItem('rt') } catch {}
-    try { sessionStorage.removeItem('rt_exp') } catch {}
+    // 1. Nettoyer TOUT en mémoire + sessionStorage immédiatement.
+    //    Utiliser clearTokens() plutôt qu'un nettoyage partiel (at, rt, it, etc.)
+    //    pour éviter qu'un re-render React restaure les tokens depuis sessionStorage.
+    clearTokens()
 
     // 2. Vider l'état React
     setUser(null)
@@ -93,7 +95,7 @@ export function AuthProvider({ children }) {
     // 3. Appel API logout (best effort, on n'attend pas)
     api.logout().catch(() => {})
 
-    // 4. Redirection Keycloak (coupe le fil d'exécution)
+    // 4. Redirection Keycloak vers /logged-out (coupe le fil d'exécution)
     kcLogout()
   }, [])
 

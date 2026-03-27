@@ -314,15 +314,25 @@ export function clearTokens() {
 }
 
 export async function logout() {
-  const idToken = _tokenStore.idToken
+  // Récupérer l'idToken depuis la mémoire EN PREMIER,
+  // puis depuis sessionStorage en fallback (nécessaire quand le refresh
+  // Keycloak ne retourne pas de nouvel id_token — comportement fréquent).
+  const idToken = _tokenStore.idToken || sessionStorage.getItem('it') || null
+
+  // Nettoyer TOUT avant la navigation pour éviter qu'un re-render React
+  // restaure les tokens depuis sessionStorage.
   clearTokens()
 
   const params = new URLSearchParams({
-    client_id:                KC_CLIENT_ID,
-    post_logout_redirect_uri: window.location.origin,
+    client_id: KC_CLIENT_ID,
+    // Rediriger vers une page dédiée (non protégée) pour briser la boucle
+    // ProtectedRoute → login() → Keycloak SSO → re-auth silencieux.
+    post_logout_redirect_uri: `${window.location.origin}/logged-out`,
   })
 
   if (idToken) {
+    // Sans id_token_hint Keycloak ne termine pas la SSO session côté serveur,
+    // ce qui provoque une ré-authentification silencieuse après le logout.
     params.set('id_token_hint', idToken)
   }
 

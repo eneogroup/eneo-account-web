@@ -41,8 +41,8 @@ function ProfileSection({ profile, onSave, isSaving }) {
   const [form, setForm] = useState({
     first_name: '',
     last_name:  '',
-    phone:      '',
-    gender:     '',
+    tel:        '',
+    genre:      '',
   })
   const [dirty, setDirty] = useState(false)
 
@@ -51,8 +51,8 @@ function ProfileSection({ profile, onSave, isSaving }) {
       setForm({
         first_name: profile.first_name || '',
         last_name:  profile.last_name  || '',
-        phone:      profile.phone      || '',
-        gender:     profile.gender     || '',
+        tel:        profile.tel        || '',
+        genre:      profile.genre      || '',
       })
     }
   }, [profile])
@@ -99,8 +99,8 @@ function ProfileSection({ profile, onSave, isSaving }) {
           <input
             className="input"
             type="tel"
-            value={form.phone}
-            onChange={e => handleChange('phone', e.target.value)}
+            value={form.tel}
+            onChange={e => handleChange('tel', e.target.value)}
             placeholder="+242 XX XXX XXXX"
           />
         </div>
@@ -109,14 +109,12 @@ function ProfileSection({ profile, onSave, isSaving }) {
           <label className="label">Genre</label>
           <select
             className="input"
-            value={form.gender}
-            onChange={e => handleChange('gender', e.target.value)}
+            value={form.genre}
+            onChange={e => handleChange('genre', e.target.value)}
           >
             <option value="">Non renseigné</option>
-            <option value="male">Homme</option>
-            <option value="female">Femme</option>
-            <option value="other">Autre</option>
-            <option value="prefer_not_to_say">Préfère ne pas dire</option>
+            <option value="M">Homme</option>
+            <option value="F">Femme</option>
           </select>
         </div>
 
@@ -280,8 +278,8 @@ function HistorySection({ history, loading, loaded, onLoad }) {
   }
 
   const FIELD_LABELS = {
-    first_name: 'Prénom', last_name: 'Nom', phone: 'Téléphone',
-    gender: 'Genre', avatar_url: 'Photo de profil',
+    first_name: 'Prénom', last_name: 'Nom', tel: 'Téléphone',
+    genre: 'Genre', avatar_url: 'Photo de profil',
   }
 
   return (

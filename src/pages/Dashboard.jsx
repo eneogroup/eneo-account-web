@@ -1,278 +1,256 @@
 /**
  * pages/Dashboard.jsx
- * Tableau de bord : résumé profil, raccourcis, dernière session, statut compte.
+ * Tableau de bord — Style Google Compte épuré
  */
-
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  User, ShieldCheck, AppWindow, AlertTriangle,
-  Clock, MapPin, Monitor, ChevronRight,
-  CheckCircle, Zap,
+  User, ShieldCheck, AppWindow, History,
+  Clock, MapPin, Monitor, ChevronRight, CheckCircle,
+  AlertTriangle, Search, Camera,
 } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { api } from '../api/client'
 import Layout from '../components/layout/Layout'
-import Avatar from '../components/ui/Avatar'
-import { GradientCard, StatCard, SkeletonCard } from '../components/ui/Card'
-import { StatusBadge } from '../components/ui/Badge'
-import { PageLoader } from '../components/ui/Loader'
 
-// ── Raccourcis vers les sections ─────────────────────────────────
-const SHORTCUTS = [
-  {
-    path:  '/profile',
-    icon:  User,
-    label: 'Informations personnelles',
-    desc:  'Modifier votre profil et avatar',
-    color: 'purple',
-  },
-  {
-    path:  '/security',
-    icon:  ShieldCheck,
-    label: 'Sécurité & sessions',
-    desc:  'Gérer vos appareils connectés',
-    color: 'gold',
-  },
-  {
-    path:  '/apps',
-    icon:  AppWindow,
-    label: 'Applications liées',
-    desc:  'Voir vos accès et rôles',
-    color: 'green',
-  },
-]
-
-const COLOR_STYLES = {
-  purple: {
-    bg:     'bg-eneo-purple-50',
-    border: 'border-eneo-purple-100',
-    icon:   'text-eneo-purple-500',
-    hover:  'hover:border-eneo-purple-300 hover:bg-eneo-purple-50',
-    arrow:  'text-eneo-purple-300 group-hover:text-eneo-purple-500',
-  },
-  gold: {
-    bg:     'bg-eneo-gold-50',
-    border: 'border-eneo-gold-100',
-    icon:   'text-eneo-gold-500',
-    hover:  'hover:border-eneo-gold-300 hover:bg-eneo-gold-50',
-    arrow:  'text-eneo-gold-300 group-hover:text-eneo-gold-500',
-  },
-  green: {
-    bg:     'bg-green-50',
-    border: 'border-green-100',
-    icon:   'text-green-500',
-    hover:  'hover:border-green-300 hover:bg-green-50',
-    arrow:  'text-green-300 group-hover:text-green-500',
-  },
-}
-
-// ── Carte raccourci ──────────────────────────────────────────────
-function ShortcutCard({ item, onClick }) {
-  const Icon = item.icon
-  const c    = COLOR_STYLES[item.color]
-
+// ── Bouton de raccourci rapide (chips Google) ────────────────────
+function QuickChip({ label, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`group card p-5 flex items-center gap-4 w-full text-left
-                  transition-all duration-200 hover:shadow-card-hover hover:-translate-y-0.5
-                  border ${c.border} ${c.hover}`}
+      className="px-4 py-2 rounded-full border border-[#DADCE0] bg-white text-sm text-[#3C4043] font-medium
+                 hover:bg-[#F1F3F4] hover:border-[#BDC1C6] transition-all duration-150 whitespace-nowrap"
     >
-      <div className={`w-11 h-11 rounded-xl ${c.bg} border ${c.border} flex items-center justify-center flex-shrink-0`}>
-        <Icon className={`w-5 h-5 ${c.icon}`} />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-gray-800 truncate">{item.label}</p>
-        <p className="text-xs text-[var(--color-text-muted)] truncate mt-0.5">{item.desc}</p>
-      </div>
-      <ChevronRight className={`w-4 h-4 flex-shrink-0 transition-all duration-200 group-hover:translate-x-0.5 ${c.arrow}`} />
+      {label}
     </button>
   )
 }
 
-// ── Dernière session ─────────────────────────────────────────────
-function LastSessionInfo({ session }) {
-  if (!session) return null
-  const locationStr = [session.city, session.country].filter(Boolean).join(', ')
-
+// ── Section card ────────────────────────────────────────────────
+function SectionCard({ icon: Icon, iconColor, title, desc, onClick }) {
   return (
-    <div className="flex items-center gap-4 p-4 rounded-xl bg-eneo-purple-50 border border-eneo-purple-100">
-      <div className="w-9 h-9 rounded-xl bg-white border border-eneo-purple-100 flex items-center justify-center flex-shrink-0">
-        <Monitor className="w-4 h-4 text-eneo-purple-400" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-eneo-purple-800 truncate">
-          {session.browser || session.device_name || 'Session active'}
-        </p>
-        <div className="flex items-center gap-3 mt-0.5">
-          {locationStr && (
-            <span className="flex items-center gap-1 text-xs text-eneo-purple-400">
-              <MapPin className="w-3 h-3" />
-              {locationStr}
-            </span>
-          )}
-          {session.last_activity && (
-            <span className="flex items-center gap-1 text-xs text-eneo-purple-400">
-              <Clock className="w-3 h-3" />
-              {new Date(session.last_activity).toLocaleString('fr-FR', {
-                day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
-              })}
-            </span>
-          )}
+    <div className="card-section cursor-pointer group" onClick={onClick}>
+      <div className="card-row">
+        <div className="flex items-center gap-4 flex-1">
+          <div
+            className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ background: `${iconColor}18` }}
+          >
+            <Icon className="w-5 h-5" style={{ color: iconColor }} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-[#202124]">{title}</p>
+            {desc && <p className="text-xs text-[#5F6368] mt-0.5 truncate max-w-xs">{desc}</p>}
+          </div>
         </div>
+        <ChevronRight className="w-4 h-4 text-[#BDC1C6] group-hover:text-[#5F6368] transition-colors" />
       </div>
-      <StatusBadge active />
     </div>
   )
 }
 
-// ── Page Dashboard ───────────────────────────────────────────────
 export default function Dashboard() {
   const navigate = useNavigate()
   const { user, profile } = useAuth()
   const [sessions, setSessions] = useState([])
   const [apps, setApps]         = useState([])
   const [loading, setLoading]   = useState(true)
+  const [checkup, setCheckup]   = useState(null)
 
   const displayName = profile?.first_name
     ? `${profile.first_name} ${profile.last_name || ''}`.trim()
     : user?.name || user?.preferred_username || 'Utilisateur'
-
   const email    = user?.email || profile?.email || ''
-  const username = user?.preferred_username || ''
+  const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
 
   useEffect(() => {
-    async function loadData() {
+    async function load() {
       setLoading(true)
       try {
-        const [sessRes, appsRes] = await Promise.allSettled([
-          api.getSessions(),
-          api.getApps(),
+        const [sr, ar, cr] = await Promise.allSettled([
+          api.getSessions(), api.getApps(), api.getSecurityCheckup(),
         ])
-        if (sessRes.status === 'fulfilled') {
-          const raw = sessRes.value.data
-          const list = Array.isArray(raw) ? raw : Array.isArray(raw?.results) ? raw.results : []
-          setSessions(list)
+        if (sr.status === 'fulfilled') {
+          const raw = sr.value.data
+          setSessions(Array.isArray(raw) ? raw : Array.isArray(raw?.results) ? raw.results : [])
         }
-        if (appsRes.status === 'fulfilled') {
-          const raw = appsRes.value.data
-          const list = Array.isArray(raw) ? raw : Array.isArray(raw?.results) ? raw.results : []
-          setApps(list)
+        if (ar.status === 'fulfilled') {
+          const raw = ar.value.data
+          setApps(Array.isArray(raw) ? raw : Array.isArray(raw?.apps) ? raw.apps : [])
         }
-      } finally {
-        setLoading(false)
-      }
+        if (cr.status === 'fulfilled') setCheckup(cr.value.data)
+      } finally { setLoading(false) }
     }
-    loadData()
+    load()
   }, [])
 
-  const safeSessions   = Array.isArray(sessions) ? sessions : []
-  const currentSession = safeSessions.find(s => s.is_current)
-  const totalSessions  = safeSessions.length
+  const currentSession = sessions.find(s => s.is_current)
 
   return (
     <Layout>
       <div className="space-y-6 page-enter">
 
-        {/* ── Hero card profil ── */}
-        <GradientCard>
-          <div className="flex items-center gap-5">
-            <Avatar
-              src={profile?.avatar_url}
-              name={displayName}
-              size="xl"
-              ring
-            />
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap mb-1">
-                <h1 className="font-display font-bold text-2xl text-white truncate">
-                  {displayName}
-                </h1>
-                <CheckCircle className="w-5 h-5 text-eneo-gold-300 flex-shrink-0" />
-              </div>
-              <p className="text-white/70 text-sm truncate">{email}</p>
-              {username && (
-                <p className="text-white/50 text-xs font-mono mt-0.5">@{username}</p>
-              )}
-              <div className="flex items-center gap-2 mt-3">
-                <span className="badge bg-white/15 text-white border-white/20 border">
-                  <Zap className="w-3 h-3" />
-                  Compte actif
-                </span>
-                <span className="badge bg-white/15 text-white border-white/20 border">
-                  Eneo Group SSO
-                </span>
-              </div>
-            </div>
-          </div>
-        </GradientCard>
+        {/* ── Profil Hero ── */}
+        <div className="card overflow-hidden">
 
-        {/* ── Stats rapides ── */}
-        {loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {[1, 2, 3].map(i => <SkeletonCard key={i} lines={2} />)}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            <StatCard
-              label="Sessions actives"
-              value={totalSessions}
-              icon={ShieldCheck}
-              color="purple"
-              trend={currentSession ? 'Dont la session courante' : undefined}
-              onClick={() => navigate('/security')}
-            />
-            <StatCard
-              label="Applications"
-              value={apps.length}
-              icon={AppWindow}
-              color="gold"
-              trend="Accès Eneo Group"
-              onClick={() => navigate('/apps')}
-            />
-            <StatCard
-              label="Profil"
-              value={profile?.first_name ? '✓ Complet' : 'À compléter'}
-              icon={User}
-              color={profile?.first_name ? 'green' : 'purple'}
+          {/* Bande colorée en haut — violet uni */}
+          <div className="h-24 w-full" style={{ background: '#7B2D8B' }} />
+
+          {/* Contenu centré */}
+          <div className="flex flex-col items-center px-6 pb-8 -mt-12">
+
+            {/* Avatar avec bouton caméra */}
+            <button
               onClick={() => navigate('/profile')}
-              className="col-span-2 sm:col-span-1"
-            />
-          </div>
-        )}
-
-        {/* ── Dernière session ── */}
-        {!loading && currentSession && (
-          <div className="card p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="section-title mb-0">Session courante</h2>
-              <button
-                onClick={() => navigate('/security')}
-                className="text-xs font-semibold text-eneo-purple-500 hover:text-eneo-purple-700
-                           flex items-center gap-1 transition-colors"
+              className="relative focus:outline-none group mb-4"
+            >
+              <div
+                className="w-24 h-24 rounded-full overflow-hidden ring-4 ring-white"
+                style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.15)' }}
               >
-                Tout voir <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-            <LastSessionInfo session={currentSession} />
-          </div>
-        )}
+                {profile?.avatar_url ? (
+                  <img src={profile.avatar_url} alt={displayName} className="w-full h-full object-cover" />
+                ) : (
+                  <div
+                    className="w-full h-full flex items-center justify-center text-white text-3xl font-bold"
+                    style={{ background: 'linear-gradient(135deg, #7B2D8B, #FBAD1A)' }}
+                  >
+                    {initials}
+                  </div>
+                )}
+              </div>
+              <div className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[#F1F3F4] border-2 border-white
+                              flex items-center justify-center shadow-sm group-hover:bg-[#E0E0E0] transition-colors">
+                <Camera className="w-3.5 h-3.5 text-[#5F6368]" />
+              </div>
+            </button>
 
-        {/* ── Raccourcis ── */}
-        <div className="card p-5">
-          <h2 className="section-title mb-1">Accès rapide</h2>
-          <p className="section-subtitle">Gérez tous les aspects de votre compte Eneo</p>
-          <div className="space-y-3">
-            {SHORTCUTS.map(item => (
-              <ShortcutCard
-                key={item.path}
-                item={item}
-                onClick={() => navigate(item.path)}
+            {/* Nom + email */}
+            <h1 className="text-2xl font-semibold text-[#202124]">{displayName}</h1>
+            <p className="text-sm text-[#5F6368] mt-1">{email}</p>
+
+            {/* Badges */}
+            <div className="flex gap-2 mt-3 flex-wrap justify-center">
+              <span className="badge-purple">Eneo Group SSO</span>
+              <span className="badge-green flex items-center gap-1">
+                <CheckCircle className="w-3 h-3" /> Compte actif
+              </span>
+              {checkup && (
+                <span className={`badge ${checkup.score === 100 ? 'badge-green' : checkup.score > 50 ? 'badge-gold' : 'badge-red'}`}>
+                  Sécurité {checkup.score}%
+                </span>
+              )}
+            </div>
+
+            {/* Barre de recherche */}
+            <div className="w-full max-w-lg mt-6 search-bar">
+              <Search className="w-4 h-4 text-[#9AA0A6] flex-shrink-0" />
+              <input
+                type="text"
+                placeholder="Rechercher dans votre compte Eneo..."
+                className="flex-1 bg-transparent text-sm text-[#202124] placeholder:text-[#9AA0A6] outline-none"
               />
-            ))}
+            </div>
+
+            {/* Chips de raccourcis */}
+            <div className="flex flex-wrap gap-2 justify-center mt-4">
+              <QuickChip label="Mon mot de passe"    onClick={() => navigate('/security')} />
+              <QuickChip label="Appareils connectés" onClick={() => navigate('/security')} />
+              <QuickChip label="Applications liées"  onClick={() => navigate('/apps')} />
+              <QuickChip label="Mon activité"         onClick={() => navigate('/activity')} />
+            </div>
           </div>
         </div>
+
+        {/* ── Bannière sécurité ── */}
+        {checkup && checkup.score < 100 && (
+          <div className="flex items-center gap-3 p-4 rounded-2xl bg-amber-50 border border-amber-200">
+            <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-amber-800">Améliorez la sécurité de votre compte</p>
+              <p className="text-xs text-amber-600 mt-0.5">{checkup.issues?.[0] || 'Complétez votre profil de sécurité'}</p>
+            </div>
+            <button onClick={() => navigate('/security')} className="text-xs font-bold text-amber-700 hover:underline flex-shrink-0">
+              Voir →
+            </button>
+          </div>
+        )}
+
+        {/* ── Gérer votre compte ── */}
+        <div>
+          <p className="text-xs font-semibold text-[#9AA0A6] uppercase tracking-widest px-1 mb-3">
+            Gérer votre compte
+          </p>
+          <div className="space-y-2">
+            <SectionCard
+              icon={User}
+              iconColor="#1A73E8"
+              title="Informations personnelles"
+              desc="Nom, photo de profil, e-mail, téléphone"
+              onClick={() => navigate('/profile')}
+            />
+            <SectionCard
+              icon={ShieldCheck}
+              iconColor="#188038"
+              title="Sécurité & sessions"
+              desc={`${sessions.length} session(s) active(s) · Mot de passe`}
+              onClick={() => navigate('/security')}
+            />
+            <SectionCard
+              icon={AppWindow}
+              iconColor="#7B2D8B"
+              title="Applications liées"
+              desc={`${apps.length} application(s) avec accès à votre compte`}
+              onClick={() => navigate('/apps')}
+            />
+            <SectionCard
+              icon={History}
+              iconColor="#E37400"
+              title="Activité récente"
+              desc="Connexions, modifications et événements de sécurité"
+              onClick={() => navigate('/activity')}
+            />
+          </div>
+        </div>
+
+        {/* ── Session courante ── */}
+        {!loading && currentSession && (
+          <div className="card p-5">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-semibold text-[#202124]">Session en cours</p>
+              <button onClick={() => navigate('/security')} className="text-xs text-[#7B2D8B] font-semibold hover:underline flex items-center gap-1">
+                Tout voir <ChevronRight className="w-3 h-3" />
+              </button>
+            </div>
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-[#F8F9FA]">
+              <div className="w-10 h-10 rounded-full bg-[#E8F0FE] flex items-center justify-center flex-shrink-0">
+                <Monitor className="w-5 h-5 text-[#1A73E8]" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-[#202124] truncate">
+                  {currentSession.browser || currentSession.device_name || 'Session active'}
+                  {currentSession.os ? ` · ${currentSession.os}` : ''}
+                </p>
+                <div className="flex items-center gap-3 mt-0.5">
+                  {currentSession.city && (
+                    <span className="flex items-center gap-1 text-xs text-[#5F6368]">
+                      <MapPin className="w-3 h-3" />{currentSession.city}, {currentSession.country}
+                    </span>
+                  )}
+                  {currentSession.last_activity && (
+                    <span className="flex items-center gap-1 text-xs text-[#5F6368]">
+                      <Clock className="w-3 h-3" />
+                      {new Date(currentSession.last_activity).toLocaleString('fr-FR', {
+                        day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
+                      })}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <span className="badge-green text-[10px]">● Actif</span>
+            </div>
+          </div>
+        )}
 
       </div>
     </Layout>

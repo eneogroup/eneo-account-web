@@ -183,9 +183,20 @@ export const api = {
   // Logout
   logout: () => apiClient.post('/me/logout/'),
 
+  // Sécurité
+  getSecurityCheckup: () => apiClient.get('/me/security/checkup/'),
+  changePassword:     (data) => apiClient.post('/me/security/password/', data),
+
   // Applications
   getApps: () => apiClient.get('/me/apps/'),
 
+  // Activités
+  getActivity: () => apiClient.get('/me/activity/'),
+
   // Suppression de compte
-  deleteAccount: () => apiClient.delete('/me/delete/'),
+  deleteAccount:   () => apiClient.delete('/me/delete/'),
+  permanentDelete: () => apiClient.delete('/me/delete/permanent/'),
+
+  // RGPD — Export de données
+  exportData: () => apiClient.get('/me/export/', { responseType: 'blob' }),
 }

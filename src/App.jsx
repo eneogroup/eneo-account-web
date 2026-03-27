@@ -2,12 +2,15 @@ import React from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider }  from './context/AuthContext'
 import { ToastProvider } from './context/ToastContext'
+import { ThemeProvider } from './context/ThemeContext'
 import ProtectedRoute    from './components/auth/ProtectedRoute'
 import Callback          from './pages/Callback'
+import LoggedOut         from './pages/LoggedOut'
 import Dashboard         from './pages/Dashboard'
 import Profile           from './pages/Profile'
 import Security          from './pages/Security'
 import Apps              from './pages/Apps'
+import Activity          from './pages/Activity'
 import DangerZone        from './pages/DangerZone'
 
 // ── Page 404 ─────────────────────────────────────────────────────
@@ -28,6 +31,7 @@ function NotFound() {
 
 export default function App() {
   return (
+    <ThemeProvider>
     <BrowserRouter>
       <AuthProvider>
         <ToastProvider>
@@ -35,13 +39,16 @@ export default function App() {
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
             {/* Callback SSO — public */}
-            <Route path="/callback" element={<Callback />} />
+            <Route path="/callback"    element={<Callback />} />
+            {/* Post-logout — public (évite la boucle ProtectedRoute → Keycloak SSO) */}
+            <Route path="/logged-out"  element={<LoggedOut />} />
 
             {/* Routes protégées */}
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/profile"   element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/security"  element={<ProtectedRoute><Security /></ProtectedRoute>} />
             <Route path="/apps"      element={<ProtectedRoute><Apps /></ProtectedRoute>} />
+            <Route path="/activity"  element={<ProtectedRoute><Activity /></ProtectedRoute>} />
             <Route path="/danger"    element={<ProtectedRoute><DangerZone /></ProtectedRoute>} />
 
             <Route path="*" element={<NotFound />} />
@@ -49,5 +56,6 @@ export default function App() {
         </ToastProvider>
       </AuthProvider>
     </BrowserRouter>
+    </ThemeProvider>
   )
 }
