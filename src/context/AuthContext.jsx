@@ -83,19 +83,22 @@ export function AuthProvider({ children }) {
 
   // ── Logout ────────────────────────────────────────────────────
   const logout = useCallback(async () => {
-    // 1. Nettoyer TOUT en mémoire + sessionStorage immédiatement.
-    //    Utiliser clearTokens() plutôt qu'un nettoyage partiel (at, rt, it, etc.)
-    //    pour éviter qu'un re-render React restaure les tokens depuis sessionStorage.
-    clearTokens()
+    // 1. Appel API logout (Pendant qu'on a encore le token)
+    // On fait un "best effort" : si l'API échoue (ex: token déjà expiré), 
+    // on continue quand même vers Keycloak.
+    try {
+      await api.logout()
+    } catch (err) {
+      console.warn("Erreur lors du logout API:", err)
+    }
 
     // 2. Vider l'état React
     setUser(null)
     setProfile(null)
 
-    // 3. Appel API logout (best effort, on n'attend pas)
-    api.logout().catch(() => {})
-
-    // 4. Redirection Keycloak vers /logged-out (coupe le fil d'exécution)
+    // 3. Redirection Keycloak (qui se chargera de clearTokens)
+    // C'est vital de ne pas appeler clearTokens() ICI, sinon kcLogout()
+    // ne trouvera plus l'id_token_hint nécessaire pour fermer la session serveur.
     kcLogout()
   }, [])
 
