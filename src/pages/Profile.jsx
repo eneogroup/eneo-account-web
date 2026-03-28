@@ -71,22 +71,29 @@ function ProfileSection({ profile, onSave, isSaving }) {
   return (
     <Card>
       <CardHeader title="Informations personnelles" subtitle="Modifiez vos données de profil" icon={User} />
-
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Champs principaux (Email / Username) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-gray-50/50 p-4 rounded-xl border border-gray-100">
+          <ReadOnlyField label="Adresse e-mail" value={profile?.email} />
+          <ReadOnlyField label="Nom d'utilisateur" value={profile?.username} />
+        </div>
+
+        <div className="divider" />
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="label">Prénom</label>
+            <label className="label text-sm">Prénom</label>
             <input
-              className="input"
+              className="input text-base"
               value={form.first_name}
               onChange={e => handleChange('first_name', e.target.value)}
               placeholder="Votre prénom"
             />
           </div>
           <div>
-            <label className="label">Nom</label>
+            <label className="label text-sm">Nom</label>
             <input
-              className="input"
+              className="input text-base"
               value={form.last_name}
               onChange={e => handleChange('last_name', e.target.value)}
               placeholder="Votre nom de famille"
@@ -95,9 +102,9 @@ function ProfileSection({ profile, onSave, isSaving }) {
         </div>
 
         <div>
-          <label className="label">Téléphone</label>
+          <label className="label text-sm">Téléphone</label>
           <input
-            className="input"
+            className="input text-base"
             type="tel"
             value={form.tel}
             onChange={e => handleChange('tel', e.target.value)}
@@ -106,9 +113,9 @@ function ProfileSection({ profile, onSave, isSaving }) {
         </div>
 
         <div>
-          <label className="label">Genre</label>
+          <label className="label text-sm">Genre</label>
           <select
-            className="input"
+            className="input text-base"
             value={form.genre}
             onChange={e => handleChange('genre', e.target.value)}
           >
@@ -116,16 +123,6 @@ function ProfileSection({ profile, onSave, isSaving }) {
             <option value="M">Homme</option>
             <option value="F">Femme</option>
           </select>
-        </div>
-
-        {/* Champs Keycloak en lecture seule */}
-        <div className="divider" />
-        <p className="text-xs text-[var(--color-text-muted)] font-medium mb-3">
-          Champs synchronisés depuis Eneo SSO
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <ReadOnlyField label="Email"            value={profile?.email} />
-          <ReadOnlyField label="Nom d'utilisateur" value={profile?.username} />
         </div>
 
         {dirty && (

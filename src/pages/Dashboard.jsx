@@ -39,8 +39,8 @@ function SectionCard({ icon: Icon, iconColor, title, desc, onClick }) {
             <Icon className="w-5 h-5" style={{ color: iconColor }} />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-[#202124]">{title}</p>
-            {desc && <p className="text-xs text-[#5F6368] mt-0.5 truncate max-w-xs">{desc}</p>}
+            <p className="text-base font-semibold text-[#202124]">{title}</p>
+            {desc && <p className="text-sm text-[#5F6368] mt-0.5 truncate max-w-xs">{desc}</p>}
           </div>
         </div>
         <ChevronRight className="w-4 h-4 text-[#BDC1C6] group-hover:text-[#5F6368] transition-colors" />
@@ -125,9 +125,9 @@ export default function Dashboard() {
               </div>
             </button>
 
-            {/* Nom + email */}
-            <h1 className="text-2xl font-semibold text-[#202124]">{displayName}</h1>
-            <p className="text-sm text-[#5F6368] mt-1">{email}</p>
+            {/* Nom + username */}
+            <h1 className="text-3xl font-semibold text-[#202124]">{displayName}</h1>
+            <p className="text-base text-[#5F6368] mt-1">@{profile?.username || user?.preferred_username || 'utilisateur'}</p>
 
             {/* Badges */}
             <div className="flex gap-2 mt-3 flex-wrap justify-center">
@@ -156,7 +156,7 @@ export default function Dashboard() {
             <div className="flex flex-wrap gap-2 justify-center mt-4">
               <QuickChip label="Mon mot de passe"    onClick={() => navigate('/security')} />
               <QuickChip label="Appareils connectés" onClick={() => navigate('/security')} />
-              <QuickChip label="Applications liées"  onClick={() => navigate('/apps')} />
+              <QuickChip label="Services Eneo Group" onClick={() => navigate('/apps')} />
               <QuickChip label="Mon activité"         onClick={() => navigate('/activity')} />
             </div>
           </div>
@@ -199,8 +199,8 @@ export default function Dashboard() {
             <SectionCard
               icon={AppWindow}
               iconColor="#7B2D8B"
-              title="Applications liées"
-              desc={`${apps.length} application(s) avec accès à votre compte`}
+              title="Services Eneo Group"
+              desc={`${apps.length} service(s) avec accès à votre compte`}
               onClick={() => navigate('/apps')}
             />
             <SectionCard

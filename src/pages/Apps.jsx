@@ -14,7 +14,7 @@ function AppInitials({ name }) {
   const colors   = ['#7B2D8B', '#1A73E8', '#188038', '#E37400', '#D93025', '#6200EE']
   const color    = colors[(name || '').charCodeAt(0) % colors.length]
   return (
-    <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0"
+    <div className="w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl flex-shrink-0"
          style={{ background: color }}>
       {initials}
     </div>
@@ -34,28 +34,23 @@ function AppRow({ app }) {
         onClick={() => allRoles.length > 0 && setExpanded(v => !v)}
       >
         {logo_url ? (
-          <img src={logo_url} alt={label} className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
+          <img src={logo_url} alt={label} className="w-16 h-16 rounded-full object-cover flex-shrink-0 border border-gray-100" />
         ) : (
           <AppInitials name={label} />
         )}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <p className="text-sm font-semibold text-[#202124]">{label}</p>
+            <p className="text-lg font-semibold text-[#202124]">{label}</p>
             {is_connected && (
-              <span className="badge-green text-[10px] flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse inline-block" />
+              <span className="badge-green text-[11px] flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse inline-block" />
                 Connecté
               </span>
             )}
           </div>
           {name !== label && (
-            <p className="text-xs text-[#9AA0A6] font-mono mt-0.5">{name}</p>
+            <p className="text-sm text-[#9AA0A6] font-mono mt-0.5">{name}</p>
           )}
-          <p className="text-xs text-[#5F6368] mt-0.5">
-            {allRoles.length > 0
-              ? `${allRoles.length} rôle${allRoles.length > 1 ? 's' : ''}`
-              : 'Accès basique'}
-          </p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           {url && (
@@ -72,28 +67,6 @@ function AppRow({ app }) {
         </div>
       </div>
 
-      {expanded && allRoles.length > 0 && (
-        <div className="px-6 pb-4 bg-[#F8F9FA]">
-          <div className="border-t border-[#E0E0E0] pt-3">
-            <p className="text-[10px] font-bold text-[#9AA0A6] uppercase tracking-widest mb-3 flex items-center gap-1.5">
-              <Shield className="w-3 h-3" /> Rôles & permissions
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {roles.map((r, i) => (
-                <span key={i} className="badge-purple text-[11px]">
-                  {typeof r === 'string' ? r : r.name}
-                </span>
-              ))}
-              {realm_roles.map((r, i) => (
-                <span key={i} className="badge-blue text-[11px] flex items-center gap-1">
-                  <Layers className="w-2.5 h-2.5" />
-                  {typeof r === 'string' ? r : r.name}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
@@ -131,8 +104,8 @@ export default function Apps() {
         {/* ── Header ── */}
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="page-title">Applications liées</h1>
-            <p className="page-subtitle">Gérez vos accès aux services Eneo Group</p>
+            <h1 className="page-title text-3xl">Services Eneo Group</h1>
+            <p className="page-subtitle text-base">Gérez vos accès aux services Eneo Group</p>
           </div>
           <button onClick={() => loadApps(true)} disabled={refreshing} className="btn-ghost flex-shrink-0">
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
@@ -157,8 +130,8 @@ export default function Apps() {
           <>
             {connected.length > 0 && (
               <div>
-                <p className="text-xs font-bold text-[#5F6368] uppercase tracking-widest px-1 mb-3">
-                  Applications actives — {connected.length}
+                <p className="text-sm font-bold text-[#5F6368] uppercase tracking-widest px-1 mb-3">
+                  Services actifs — {connected.length}
                 </p>
                 <div className="card-section">
                   {connected.map((app, i) => <AppRow key={app.id || app.name || i} app={app} />)}
@@ -168,8 +141,8 @@ export default function Apps() {
 
             {available.length > 0 && (
               <div>
-                <p className="text-xs font-bold text-[#5F6368] uppercase tracking-widest px-1 mb-3">
-                  Autres accès — {available.length}
+                <p className="text-sm font-bold text-[#5F6368] uppercase tracking-widest px-1 mb-3">
+                  Autres services — {available.length}
                 </p>
                 <div className="card-section">
                   {available.map((app, i) => <AppRow key={app.id || app.name || i} app={app} />)}
@@ -180,8 +153,8 @@ export default function Apps() {
             <div className="flex items-start gap-3 p-4 rounded-2xl bg-[#F8F9FA] border border-[#E0E0E0]">
               <Shield className="w-4 h-4 text-[#5F6368] flex-shrink-0 mt-0.5" />
               <p className="text-xs text-[#5F6368]">
-                Les accès et rôles sont gérés par votre administrateur Eneo SSO.
-                Pour demander l'accès à une application, contactez votre responsable IT.
+                L'accès à ces services est géré par votre administrateur Eneo SSO.
+                Pour demander l'accès à un nouveau service, contactez votre responsable IT.
               </p>
             </div>
           </>

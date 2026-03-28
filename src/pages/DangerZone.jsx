@@ -14,6 +14,7 @@ import { useGlobalToast } from '../context/ToastContext'
 import Layout from '../components/layout/Layout'
 import Card from '../components/ui/Card'
 import { Spinner } from '../components/ui/Loader'
+import ConfirmDialog from '../components/ui/ConfirmDialog'
 
 const CONFIRM_WORD = 'SUPPRIMER'
 
@@ -34,6 +35,7 @@ function WarningBlock({ icon: Icon, title, children }) {
 function ExportSection() {
   const [isExporting, setIsExporting] = useState(false)
   const [done, setDone]               = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
   const { toast } = useGlobalToast()
 
   const handleExport = async () => {
@@ -60,38 +62,53 @@ function ExportSection() {
   }
 
   return (
-    <Card>
-      <div className="flex items-center gap-3 mb-5">
-        <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/40 flex items-center justify-center">
-          <FileJson className="w-6 h-6 text-blue-500" />
+    <>
+      <Card>
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/40 flex items-center justify-center">
+            <FileJson className="w-6 h-6 text-blue-500" />
+          </div>
+          <div>
+            <h2 className="font-display font-bold text-lg text-[var(--color-text)]">
+              Exporter mes données
+            </h2>
+            <p className="text-sm text-[var(--color-text-muted)]">Conforme RGPD — Article 20</p>
+          </div>
         </div>
-        <div>
-          <h2 className="font-display font-bold text-lg text-[var(--color-text)]">
-            Exporter mes données
-          </h2>
-          <p className="text-sm text-[var(--color-text-muted)]">Conforme RGPD — Article 20</p>
-        </div>
-      </div>
 
-      <p className="text-sm text-[var(--color-text-muted)] mb-5 leading-relaxed">
-        Téléchargez une copie de toutes vos données personnelles : profil, historique des
-        modifications, adresse et sessions actives. Le fichier est au format <strong className="text-[var(--color-text-2)]">JSON</strong>.
-      </p>
+        <p className="text-sm text-[var(--color-text-muted)] mb-5 leading-relaxed">
+          Téléchargez une copie de toutes vos données personnelles : profil, historique des
+          modifications, adresse et sessions actives. Le fichier est au format <strong className="text-[var(--color-text-2)]">JSON</strong>.
+        </p>
 
-      <button
-        onClick={handleExport}
-        disabled={isExporting}
-        className="btn-primary"
-      >
-        {isExporting ? (
-          <><Spinner size="sm" color="white" />Export en cours…</>
-        ) : done ? (
-          <><CheckCircle2 className="w-4 h-4" />Téléchargé !</>
-        ) : (
-          <><Download className="w-4 h-4" />Télécharger mes données</>
-        )}
-      </button>
-    </Card>
+        <button
+          onClick={() => setShowConfirm(true)}
+          disabled={isExporting}
+          className="btn-primary"
+        >
+          {isExporting ? (
+            <><Spinner size="sm" color="white" />Export en cours…</>
+          ) : done ? (
+            <><CheckCircle2 className="w-4 h-4" />Téléchargé !</>
+          ) : (
+            <><Download className="w-4 h-4" />Télécharger mes données</>
+          )}
+        </button>
+      </Card>
+
+      <ConfirmDialog
+        open={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={() => {
+          setShowConfirm(false)
+          handleExport()
+        }}
+        title="Exporter vos données ?"
+        message="Un fichier JSON contenant l'intégralité de vos informations personnelles sera généré et téléchargé sur votre appareil."
+        confirmLabel="Démarrer l'export"
+        isLoading={isExporting}
+      />
+    </>
   )
 }
 
@@ -99,6 +116,7 @@ function ExportSection() {
 function SoftDeleteSection({ displayName, onDelete, isDeleting }) {
   const [step, setStep]             = useState(1)
   const [inputValue, setInputValue] = useState('')
+  const [showConfirm, setShowConfirm] = useState(false)
   const isConfirmed = inputValue === CONFIRM_WORD
 
   return (
@@ -182,7 +200,7 @@ function SoftDeleteSection({ displayName, onDelete, isDeleting }) {
               Annuler
             </button>
             <button
-              onClick={() => onDelete('soft')}
+              onClick={() => setShowConfirm(true)}
               disabled={!isConfirmed || isDeleting}
               className={`flex-1 justify-center btn transition-all duration-200 ${
                 isConfirmed && !isDeleting
@@ -196,6 +214,20 @@ function SoftDeleteSection({ displayName, onDelete, isDeleting }) {
               }
             </button>
           </div>
+
+          <ConfirmDialog
+            open={showConfirm}
+            onClose={() => setShowConfirm(false)}
+            onConfirm={() => {
+              setShowConfirm(false)
+              onDelete('soft')
+            }}
+            danger
+            title="Confirmer la désactivation"
+            message={`Êtes-vous sûr de vouloir désactiver le compte de ${displayName} ? Vous pourrez le réactiver sous 30 jours.`}
+            confirmLabel="Désactiver maintenant"
+            isLoading={isDeleting}
+          />
         </>
       )}
     </Card>
@@ -207,6 +239,7 @@ function PermanentDeleteSection({ displayName, onDelete, isDeleting }) {
   const [step, setStep]             = useState(1)
   const [inputValue, setInputValue] = useState('')
   const PERM_WORD = 'SUPPRIMER DÉFINITIVEMENT'
+  const [showConfirm, setShowConfirm] = useState(false)
   const isConfirmed = inputValue === PERM_WORD
 
   return (
@@ -297,7 +330,7 @@ function PermanentDeleteSection({ displayName, onDelete, isDeleting }) {
               Annuler
             </button>
             <button
-              onClick={() => onDelete('permanent')}
+              onClick={() => setShowConfirm(true)}
               disabled={!isConfirmed || isDeleting}
               className={`flex-1 justify-center btn transition-all duration-200 ${
                 isConfirmed && !isDeleting
@@ -311,6 +344,20 @@ function PermanentDeleteSection({ displayName, onDelete, isDeleting }) {
               }
             </button>
           </div>
+
+          <ConfirmDialog
+            open={showConfirm}
+            onClose={() => setShowConfirm(false)}
+            onConfirm={() => {
+              setShowConfirm(false)
+              onDelete('permanent')
+            }}
+            danger
+            title="Action irréversible"
+            message="Cette action supprimera PHYSIQUEMENT toutes vos données. Aucune restauration ne sera possible par le support. Voulez-vous continuer ?"
+            confirmLabel="Oui, tout supprimer"
+            isLoading={isDeleting}
+          />
         </>
       )}
     </Card>

@@ -102,12 +102,25 @@ apiClient.interceptors.response.use(
 function formatApiError(error) {
   if (error.response) {
     const { status, data } = error.response
-    const message =
+    let message =
       data?.detail ||
       data?.message ||
-      data?.error ||
-      (typeof data === 'string' ? data : null) ||
-      getDefaultMessage(status)
+      data?.error
+
+    // Si c'est un objet (ex: erreurs de validation DRF {"field": ["msg"]})
+    if (!message && data && typeof data === 'object') {
+      message = Object.entries(data)
+        .map(([field, msgs]) => {
+          const fieldName = field === 'non_field_errors' ? '' : `${field}: `
+          const msg = Array.isArray(msgs) ? msgs.join(' ') : msgs
+          return `${fieldName}${msg}`
+        })
+        .join(' | ')
+    }
+
+    if (!message) {
+      message = (typeof data === 'string' ? data : null) || getDefaultMessage(status)
+    }
 
     return {
       status,
