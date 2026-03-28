@@ -21,7 +21,7 @@ const NAV_ITEMS = [
   { path: '/dashboard', icon: LayoutDashboard, label: 'Accueil' },
   { path: '/profile',   icon: User,            label: 'Informations personnelles' },
   { path: '/security',  icon: ShieldCheck,     label: 'Sécurité et connexion' },
-  { path: '/apps',      icon: AppWindow,       label: 'Applications liées' },
+  { path: '/apps',      icon: AppWindow,       label: 'Services Eneo Group' },
   { path: '/activity',  icon: History,         label: 'Mon activité' },
 ]
 const DANGER_ITEM = { path: '/danger', icon: AlertTriangle, label: 'Zone de danger' }
